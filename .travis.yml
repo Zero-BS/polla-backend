@@ -1,0 +1,9 @@
+language: java
+
+script:
+- cd core
+- ./gradlew build
+- cd ..
+- sam validate
+- sam build
+- sam deploy
