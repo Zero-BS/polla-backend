@@ -1,13 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Polla AWS Serverless Micronaut
-
-Globals:
-  Api:
-    EndpointConfiguration: REGIONAL
+Description: Polla AWS Serverless Micronaut    
 
 Resources:
-  PollaServiceFunction:
+  PollaApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Auth:
+        DefaultAuthorizer: PollaLambdaTokenAuthorizer
+        Authorizers: 
+          PollaLambdaTokenAuthorizer:
+            FunctionArn: !GetAtt PollaAuthFunction.Arn
+            Identity:
+              ReauthorizeEvery: 600
+
+  PollaCoreFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: io.micronaut.function.aws.proxy.MicronautLambdaHandler
@@ -25,8 +33,17 @@ Resources:
         ProxyResource:
           Type: Api
           Properties:
+            RestApiId: !Ref PollaApi
             Path: /{proxy+}
             Method: any
+
+  PollaAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handler.authorizer
+      Runtime: nodejs14.x
+      CodeUri: ./authorizer
+
   PollaTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -72,6 +89,7 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 2
             WriteCapacityUnits: 2
+  
   TableWCU:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -81,6 +99,7 @@ Resources:
       RoleARN: !GetAtt ScalingRole.Arn
       ScalableDimension: dynamodb:table:WriteCapacityUnits
       ServiceNamespace: dynamodb
+  
   TableRCU:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -90,6 +109,7 @@ Resources:
       RoleARN: !GetAtt ScalingRole.Arn
       ScalableDimension: dynamodb:table:ReadCapacityUnits
       ServiceNamespace: dynamodb
+  
   UsernameGsiWCU:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -99,6 +119,7 @@ Resources:
       RoleARN: !GetAtt ScalingRole.Arn
       ScalableDimension: dynamodb:index:WriteCapacityUnits
       ServiceNamespace: dynamodb
+  
   UsernameGsiRCU:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -108,6 +129,7 @@ Resources:
       RoleARN: !GetAtt ScalingRole.Arn
       ScalableDimension: dynamodb:index:ReadCapacityUnits
       ServiceNamespace: dynamodb
+  
   TagNameGsiWCU:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -117,6 +139,7 @@ Resources:
       RoleARN: !GetAtt ScalingRole.Arn
       ScalableDimension: dynamodb:index:WriteCapacityUnits
       ServiceNamespace: dynamodb
+  
   TagNameGsiRCU:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -126,6 +149,7 @@ Resources:
       RoleARN: !GetAtt ScalingRole.Arn
       ScalableDimension: dynamodb:index:ReadCapacityUnits
       ServiceNamespace: dynamodb
+  
   ScalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -154,6 +178,7 @@ Resources:
                   - "cloudwatch:SetAlarmState"
                   - "cloudwatch:DeleteAlarms"
                 Resource: "*"
+  
   TableWriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -164,6 +189,7 @@ Resources:
         TargetValue: 70.0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  
   TableReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -174,6 +200,7 @@ Resources:
         TargetValue: 70.0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
+  
   UsernameGsiWriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -184,6 +211,7 @@ Resources:
         TargetValue: 70.0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  
   UsernameGsiReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -194,6 +222,7 @@ Resources:
         TargetValue: 70.0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
+  
   TagNameGsiWriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -204,6 +233,7 @@ Resources:
         TargetValue: 70.0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  
   TagNameGsiReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -216,8 +246,14 @@ Resources:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
 Outputs:
-  PollaServiceApi:
-    Description: URL for application
-    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod'
-    Export:
-      Name: PollaServiceApi
+  Region:
+    Description: Region
+    Value: !Ref AWS::Region
+
+  ApiId:
+    Description: API ID
+    Value: !Ref PollaApi
+
+  ApiUrl:
+    Description: API Base URL
+    Value: !Sub 'https://${PollaApi}.execute-api.${AWS::Region}.amazonaws.com/dev'
