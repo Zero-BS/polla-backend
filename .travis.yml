@@ -4,8 +4,8 @@ before_install:
   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   - unzip awscliv2.zip
   - sudo ./aws/install
-  - curl "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip"
-  - unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
+  - curl "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip" - o "aws-sam-cli.zip"
+  - unzip aws-sam-cli.zip -d sam-installation
   - sudo ./sam-installation/install
 
 script:
