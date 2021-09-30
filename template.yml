@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Polla AWS Serverless Micronaut    
 
+Parameters:
+  AndroidGoodleClientId:
+    Type: String
+
 Resources:
   PollaApi:
     Type: AWS::Serverless::Api
@@ -43,6 +47,9 @@ Resources:
       Handler: handler.authorizer
       Runtime: nodejs14.x
       CodeUri: ./authorizer
+      Environment:
+        Variables:
+          ANDROID_GOOGLE_CLIENT_ID: !Ref AndroidGoodleClientId
 
   PollaTable:
     Type: AWS::DynamoDB::Table

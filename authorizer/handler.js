@@ -6,15 +6,16 @@ exports.authorizer = async function (event) {
         return generateAuthResponse('', 'Deny', methodArn);
 
     const token = event.authorizationToken.substring('Bearer '.length);
+    let principal = await verify(token);
 
-    return generateAuthResponse(token, 'Allow', methodArn);
+    return generateAuthResponse(principal, 'Allow', methodArn);
 }
 
-function generateAuthResponse(principalId, effect, methodArn) {
+function generateAuthResponse(principal, effect, methodArn) {
     const policyDocument = generatePolicyDocument(effect, methodArn);
 
     return {
-        principalId,
+        principal,
         policyDocument
     };
 }
@@ -32,4 +33,17 @@ function generatePolicyDocument(effect, methodArn) {
     };
 
     return policyDocument;
+}
+
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.ANDROID_GOOGLE_CLIENT_ID);
+async function verify(token) {
+    const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.ANDROID_GOOGLE_CLIENT_ID
+    });
+    console.log(ticket);
+    const payload = ticket.getPayload();
+    console.log(payload);
+    return payload;
 }
