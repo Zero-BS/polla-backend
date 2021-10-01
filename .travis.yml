@@ -18,7 +18,7 @@ script:
 - cd ..
 - sam validate
 - sam build
-- sam deploy
+- sam deploy --parameter-overrides ParameterKey=AndroidGoodleClientId,ParameterValue=$ANDROID_GOOGLE_CLIENT_ID
 
 #add following environment variables using travis ci ui
 #AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION
