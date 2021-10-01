@@ -3,7 +3,9 @@ Transform: AWS::Serverless-2016-10-31
 Description: Polla AWS Serverless Micronaut    
 
 Parameters:
-  AndroidGoodleClientId:
+  AndroidGoogleClientId:
+    Type: String
+  WebGoogleClientId:
     Type: String
 
 Resources:
@@ -49,7 +51,8 @@ Resources:
       CodeUri: ./authorizer
       Environment:
         Variables:
-          ANDROID_GOOGLE_CLIENT_ID: !Ref AndroidGoodleClientId
+          ANDROID_GOOGLE_CLIENT_ID: !Ref AndroidGoogleClientId
+          WEB_GOOGLE_CLIENT_ID: !Ref WebGoogleClientId
 
   PollaTable:
     Type: AWS::DynamoDB::Table

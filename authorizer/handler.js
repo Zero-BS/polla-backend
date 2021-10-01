@@ -1,3 +1,6 @@
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client();
+
 exports.authorizer = async function (event) {
     const methodArn = event.methodArn;
     if (!event.authorizationToken
@@ -35,15 +38,10 @@ function generatePolicyDocument(effect, methodArn) {
     return policyDocument;
 }
 
-const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(process.env.ANDROID_GOOGLE_CLIENT_ID);
 async function verify(token) {
     const ticket = await client.verifyIdToken({
         idToken: token,
-        audience: process.env.ANDROID_GOOGLE_CLIENT_ID
+        audience: [process.env.ANDROID_GOOGLE_CLIENT_ID, process.env.WEB_GOOGLE_CLIENT_ID]
     });
-    console.log(ticket);
-    const payload = ticket.getPayload();
-    console.log(payload);
-    return payload;
+    return ticket.getPayload();
 }
