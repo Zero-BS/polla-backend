@@ -3,7 +3,7 @@ const client = new OAuth2Client();
 
 exports.authorizer = async function (event) {
     const methodArn = event.methodArn;
-    let principal = '';
+    let principal = {};
     if (!event.authorizationToken
         || typeof event.authorizationToken !== 'string'
         || !event.authorizationToken.startsWith('Bearer '))
@@ -26,7 +26,7 @@ function generateAuthResponse(principal, effect, methodArn) {
     return {
         principalId: principal?.sub,
         policyDocument,
-        context: principal ?? {}
+        context: principal
     };
 }
 
