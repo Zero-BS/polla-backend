@@ -12,6 +12,8 @@ Resources:
   PollaApi:
     Type: AWS::Serverless::Api
     Properties:
+      EndpointConfiguration:
+        Type: REGIONAL
       StageName: dev
       Auth:
         DefaultAuthorizer: PollaLambdaTokenAuthorizer

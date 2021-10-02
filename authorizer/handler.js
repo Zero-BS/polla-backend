@@ -3,13 +3,19 @@ const client = new OAuth2Client();
 
 exports.authorizer = async function (event) {
     const methodArn = event.methodArn;
+    let principal = '';
     if (!event.authorizationToken
         || typeof event.authorizationToken !== 'string'
         || !event.authorizationToken.startsWith('Bearer '))
-        return generateAuthResponse('', 'Deny', methodArn);
+        return generateAuthResponse(principal, 'Deny', methodArn);
 
     const token = event.authorizationToken.substring('Bearer '.length);
-    let principal = await verify(token);
+    try {
+        principal = await verify(token);
+    } catch (err) {
+        console.error(err);
+        return generateAuthResponse(principal, 'Deny', methodArn);
+    }
 
     return generateAuthResponse(principal, 'Allow', methodArn);
 }
@@ -18,8 +24,9 @@ function generateAuthResponse(principal, effect, methodArn) {
     const policyDocument = generatePolicyDocument(effect, methodArn);
 
     return {
-        principal,
-        policyDocument
+        principalId: principal?.sub,
+        policyDocument,
+        context: principal ?? {}
     };
 }
 
