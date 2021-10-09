@@ -64,7 +64,6 @@ jacocoTestReport {
 sonarqube {
     properties {
         property "sonar.projectKey", "Zero-BS_polla-backend"
-        property "sonar.log.level", "DEBUG"
     }
 }
 
