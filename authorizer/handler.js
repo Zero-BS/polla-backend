@@ -24,7 +24,7 @@ function generateAuthResponse(principal, effect, methodArn) {
     const policyDocument = generatePolicyDocument(effect, methodArn);
 
     return {
-        principalId: principal?.sub,
+        principalId: JSON.stringify(principal),
         policyDocument,
         context: principal
     };
