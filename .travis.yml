@@ -6,8 +6,6 @@ jdk: openjdk11
 addons:
   sonarcloud:
     organization: "zero-bs"
-    token:
-      secure: $SONAR_TOKEN
 
 install:
   - nvm install 14.17.6
@@ -20,7 +18,7 @@ install:
 
 script:
 - cd core
-- ./gradlew sonarqube
+- ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN
 - cd ..
 - sam validate
 - sam build
