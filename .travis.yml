@@ -19,6 +19,9 @@ install:
 script:
 - cd core
 - ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN
+- sleep 60
+- qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=Zero-BS_polla-backend' | jq -r '.projectStatus.status')
+- if [ $qualityGate != 'OK' ]; then exit 1; fi
 - cd ..
 - sam validate
 - sam build
