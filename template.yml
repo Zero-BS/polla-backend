@@ -26,7 +26,8 @@ Resources:
   PollaCoreFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: io.micronaut.function.aws.proxy.MicronautLambdaHandler
+      Handler: org.zerobs.CustomLambdaHandler
+      # Use "Runtime: java11" in local for faster build
       Runtime: provided.al2
       CodeUri: ./core
       MemorySize: 1024

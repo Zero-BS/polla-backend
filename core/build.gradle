@@ -31,6 +31,7 @@ dependencies {
 
     testImplementation("io.micronaut:micronaut-http-client")
 
+    implementation group: 'javax.inject', name: 'javax.inject', version: '1'
 }
 
 
