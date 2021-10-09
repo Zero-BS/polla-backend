@@ -18,9 +18,8 @@ public class BookController {
 
     @Post("book")
     public BookSaved save(@Valid @Body Book book) {
-        log.error("principal: {}", principal);
         BookSaved bookSaved = new BookSaved();
-        bookSaved.setName(book.getName());
+        bookSaved.setName(principal.getName());
         bookSaved.setIsbn(UUID.randomUUID().toString());
         return bookSaved;
     }

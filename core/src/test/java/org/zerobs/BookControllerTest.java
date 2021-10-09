@@ -16,6 +16,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.zerobs.entities.Principal;
 
 public class BookControllerTest {
 
@@ -44,15 +45,31 @@ public class BookControllerTest {
         Book book = new Book();
         book.setName("Building Microservices");
         String json = objectMapper.writeValueAsString(book);
+        Principal principal = getPrincipal();
+
         AwsProxyRequest request = new AwsProxyRequestBuilder("/book", HttpMethod.POST.toString())
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .body(json)
-                .authorizerPrincipal("{\"iss\":\"https://accounts.google.com\",\"azp\":\"1234567azp\",\"aud\":\"2345678aud\",\"sub\":\"123456789\",\"email\":\"abc@xyz.com\",\"email_verified\":true,\"name\":\"Green Demogoblin\",\"picture\":\"https://lh3.googleusercontent.com/a-/sdfghjk3456789\",\"given_name\":\"Green\",\"family_name\":\"Demogoblin\",\"locale\":\"en\",\"iat\":1633615166,\"exp\":1633618766}")
+                .authorizerPrincipal(objectMapper.writeValueAsString(principal))
                 .build();
         AwsProxyResponse response = handler.handleRequest(request, lambdaContext);
         Assertions.assertEquals(HttpStatus.OK.getCode(), response.getStatusCode());
         BookSaved bookSaved = objectMapper.readValue(response.getBody(), BookSaved.class);
-        Assertions.assertEquals(bookSaved.getName(), book.getName());
+        Assertions.assertEquals(principal.getName(), bookSaved.getName());
         Assertions.assertNotNull(bookSaved.getIsbn());
+    }
+
+    private Principal getPrincipal() {
+        Principal principal = new Principal();
+        principal.setIss("https://accounts.google.com");
+        principal.setSub("2345678");
+        principal.setEmail("abc@xyz.com");
+        principal.setEmailVerified(true);
+        principal.setGivenName("Green");
+        principal.setFamilyName("Demogoblin");
+        principal.setName(principal.getGivenName() + " " + principal.getFamilyName());
+        principal.setLocale("en");
+        principal.setPicture("https://lh3.googleusercontent.com/a-/sdfghjk3456789");
+        return principal;
     }
 }
