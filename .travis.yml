@@ -7,6 +7,9 @@ addons:
   sonarcloud:
     organization: "zero-bs"
 
+env:
+  - USE_LOCAL_DB=true
+
 install:
   - nvm install 14.17.6
   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"

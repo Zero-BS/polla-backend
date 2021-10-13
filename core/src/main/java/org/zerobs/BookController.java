@@ -1,5 +1,9 @@
 package org.zerobs;
 
+import com.amazonaws.serverless.proxy.model.AwsProxyRequest;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
@@ -17,7 +21,10 @@ public class BookController {
     Principal principal;
 
     @Post("book")
-    public BookSaved save(@Valid @Body Book book) {
+    public BookSaved save(@Valid @Body Book book, Context context, AwsProxyRequest awsProxyRequest) throws JsonProcessingException {
+        var objectMapper = new ObjectMapper();
+        log.error(objectMapper.writeValueAsString(context));
+        log.error(objectMapper.writeValueAsString(awsProxyRequest));
         BookSaved bookSaved = new BookSaved();
         bookSaved.setName(principal.getName());
         bookSaved.setIsbn(UUID.randomUUID().toString());

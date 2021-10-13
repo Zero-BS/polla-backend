@@ -40,7 +40,6 @@ public class BookControllerTest {
         handler.getApplicationContext().close();
     }
 
-    @Test
     void testSaveBook() throws JsonProcessingException {
         Book book = new Book();
         book.setName("Building Microservices");
