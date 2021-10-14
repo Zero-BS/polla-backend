@@ -21,6 +21,8 @@ public class BookController {
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         log.error(objectMapper.writeValueAsString(awsProxyRequest));
         log.error(awsProxyRequest.getRequestContext().getAuthorizer().getContextValue("iss"));
+        log.error(awsProxyRequest.getRequestContext().getAuthorizer().getContextValue("family_name"));
+        log.error(awsProxyRequest.getRequestContext().getAuthorizer().getContextValue("picture"));
         BookSaved bookSaved = new BookSaved();
         bookSaved.setIsbn(UUID.randomUUID().toString());
         return bookSaved;
