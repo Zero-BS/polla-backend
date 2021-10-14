@@ -19,16 +19,14 @@ import java.util.UUID;
 @Slf4j
 public class BookController {
     @Inject
-    Principal principal;
+    AwsProxyRequest awsProxyRequest;
 
     @Post("book")
-    public BookSaved save(@Valid @Body Book book, Context context, AwsProxyRequest awsProxyRequest) throws JsonProcessingException {
+    public BookSaved save(@Valid @Body Book book) throws JsonProcessingException {
         var objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        log.error(objectMapper.writeValueAsString(context));
         log.error(objectMapper.writeValueAsString(awsProxyRequest));
         BookSaved bookSaved = new BookSaved();
-        bookSaved.setName(principal.getName());
         bookSaved.setIsbn(UUID.randomUUID().toString());
         return bookSaved;
     }
