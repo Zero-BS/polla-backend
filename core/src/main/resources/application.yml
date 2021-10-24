@@ -1,3 +1,7 @@
 micronaut:
   application:
     name: polla
+jackson:
+  property-naming-strategy: SNAKE_CASE
+locale:
+  default: en-US

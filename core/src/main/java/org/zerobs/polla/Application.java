@@ -1,4 +1,4 @@
-package org.zerobs;
+package org.zerobs.polla;
 
 import io.micronaut.runtime.Micronaut;
 

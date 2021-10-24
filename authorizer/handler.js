@@ -12,6 +12,7 @@ exports.authorizer = async function (event) {
     const token = event.authorizationToken.substring('Bearer '.length);
     try {
         principal = await verify(token);
+        principal.authority = 'GOOGLE';
     } catch (err) {
         console.error(err);
         return generateAuthResponse(principal, 'Deny', methodArn);
@@ -24,7 +25,7 @@ function generateAuthResponse(principal, effect, methodArn) {
     const policyDocument = generatePolicyDocument(effect, methodArn);
 
     return {
-        principalId: JSON.stringify(principal),
+        principalId: principal?.sub,
         policyDocument,
         context: principal
     };
