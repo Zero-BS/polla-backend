@@ -3,6 +3,9 @@ arch: amd64
 language: java
 jdk: openjdk11
 
+services:
+  - docker
+
 addons:
   sonarcloud:
     organization: "zero-bs"
@@ -18,6 +21,7 @@ install:
   - wget "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip"
   - unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
   - sudo ./sam-installation/install
+  - docker run -dp 8000:8000 amazon/dynamodb-local
 
 script:
 - cd core
@@ -27,7 +31,7 @@ script:
 - if [ $qualityGate != 'OK' ]; then exit 1; fi
 - cd ..
 - sam validate
-- sam build
+- travis_wait sam build
 - sam deploy --parameter-overrides ParameterKey=AndroidGoogleClientId,ParameterValue=$ANDROID_GOOGLE_CLIENT_ID ParameterKey=WebGoogleClientId,ParameterValue=$WEB_GOOGLE_CLIENT_ID
 
 #add following environment variables using travis ci ui
