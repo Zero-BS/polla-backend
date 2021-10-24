@@ -24,16 +24,20 @@ install:
   - docker run -dp 8000:8000 amazon/dynamodb-local
 
 script:
-- cd core
-- ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN
-- sleep 10
-- qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=Zero-BS_polla-backend' | jq -r '.projectStatus.status')
-- if [ $qualityGate != 'OK' ]; then exit 1; fi
-- cd ..
-- sam validate
-- travis_wait sam build
-- sam deploy --parameter-overrides ParameterKey=AndroidGoogleClientId,ParameterValue=$ANDROID_GOOGLE_CLIENT_ID ParameterKey=WebGoogleClientId,ParameterValue=$WEB_GOOGLE_CLIENT_ID
+  - cd core
+  - ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN
+  - sleep 10
+  - qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=Zero-BS_polla-backend' | jq -r '.projectStatus.status')
+  - if [ $qualityGate != 'OK' ]; then exit 1; fi
+  - cd ..
+  - sam validate
+
+after_success:
+  - travis_wait sam build
+  - sam deploy --parameter-overrides ParameterKey=AndroidGoogleClientId,ParameterValue=$ANDROID_GOOGLE_CLIENT_ID ParameterKey=WebGoogleClientId,ParameterValue=$WEB_GOOGLE_CLIENT_ID
+
+after_failure:
+  - travis_terminate 1
 
 #add following environment variables using travis ci ui
 #AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, ANDROID_GOOGLE_CLIENT_ID, WEB_GOOGLE_CLIENT_ID, SONAR_TOKEN
-

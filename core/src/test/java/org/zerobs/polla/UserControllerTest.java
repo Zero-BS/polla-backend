@@ -51,7 +51,7 @@ public class UserControllerTest {
 
     @Test
     void test_get_UserNotCreated_404() {
-        assertEquals(OK.getCode(), getAwsProxyResponse(DELETE).getStatusCode());
+        assertEquals(134, getAwsProxyResponse(DELETE).getStatusCode());
         assertEquals(NOT_FOUND.getCode(), getAwsProxyResponse(GET).getStatusCode());
     }
 
