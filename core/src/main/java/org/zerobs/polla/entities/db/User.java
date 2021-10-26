@@ -1,6 +1,8 @@
 package org.zerobs.polla.entities.db;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -36,6 +38,20 @@ public class User extends CreatableEntity {
 
     public User(Principal principal) {
         setId(principal);
+    }
+
+    @JsonCreator
+    public User(@JsonProperty("id") String id, @JsonProperty("username") String username,
+                @JsonProperty("year_of_birth") Integer yearOfBirth, @JsonProperty("gender") Gender gender,
+                @JsonProperty("locale") String locale, @JsonProperty("email") String email,
+                @JsonProperty("email_verified") boolean emailVerified) {
+        this.id = id;
+        this.username = username;
+        this.yearOfBirth = yearOfBirth;
+        this.gender = gender;
+        this.locale = locale;
+        this.email = email;
+        this.emailVerified = emailVerified;
     }
 
     public void setId(@NotNull Principal principal) {

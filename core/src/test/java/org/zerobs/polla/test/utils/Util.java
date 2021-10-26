@@ -5,11 +5,11 @@ import com.amazonaws.serverless.proxy.model.AwsProxyRequest;
 import io.micronaut.http.HttpMethod;
 
 public class Util {
-    public static AwsProxyRequest getAwsProxyRequest(String path, HttpMethod httpMethod) {
-        return getAwsProxyRequest(path, httpMethod, null);
+    public static AwsProxyRequest getRequest(String path, HttpMethod httpMethod) {
+        return getRequest(path, httpMethod, null);
     }
 
-    public static AwsProxyRequest getAwsProxyRequest(String path, HttpMethod httpMethod, String body) {
+    public static AwsProxyRequest getRequest(String path, HttpMethod httpMethod, String body) {
         String principalId = "12345678";
         String givenName = "Green";
         String familyName = "Demogoblin";
