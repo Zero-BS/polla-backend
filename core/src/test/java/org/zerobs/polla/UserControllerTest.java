@@ -59,9 +59,9 @@ public class UserControllerTest {
     @Test
     void test_add_emptyBody_400() throws JsonProcessingException {
         assertEquals(OK.getCode(), getResponse(DELETE).getStatusCode());
-        AwsProxyResponse awsProxyResponse = getResponse((User) null);
-        assertEquals(BAD_REQUEST.getCode(), awsProxyResponse.getStatusCode());
-        ExceptionResponseBody responseBody = objectMapper.readValue(awsProxyResponse.getBody(), ExceptionResponseBody.class);
+        AwsProxyResponse response = getResponse((User) null);
+        assertEquals(BAD_REQUEST.getCode(), response.getStatusCode());
+        ExceptionResponseBody responseBody = objectMapper.readValue(response.getBody(), ExceptionResponseBody.class);
         assertEquals("Please provide user details.", responseBody.getMessageText());
         assertEquals(EMPTY_USER.getInternalCode(), responseBody.getInternalCode());
     }
@@ -69,9 +69,9 @@ public class UserControllerTest {
     @Test
     void test_add_emptyUsername_400() throws JsonProcessingException {
         assertEquals(OK.getCode(), getResponse(DELETE).getStatusCode());
-        AwsProxyResponse awsProxyResponse = getResponse(new User());
-        assertEquals(BAD_REQUEST.getCode(), awsProxyResponse.getStatusCode());
-        ExceptionResponseBody responseBody = objectMapper.readValue(awsProxyResponse.getBody(), ExceptionResponseBody.class);
+        AwsProxyResponse response = getResponse(new User());
+        assertEquals(BAD_REQUEST.getCode(), response.getStatusCode());
+        ExceptionResponseBody responseBody = objectMapper.readValue(response.getBody(), ExceptionResponseBody.class);
         String messagePrefix = "Please provide a username. For your privacy, it is suggested that use a username that " +
                 "can not be used to identify you. Try something like ";
         assertTrue(responseBody.getMessageText().startsWith(messagePrefix));
@@ -85,9 +85,9 @@ public class UserControllerTest {
         User user = new User();
         user.setUsername("GreenDemogoblin_4678");
         user.setGender(Gender.FEMALE);
-        AwsProxyResponse awsProxyResponse = getResponse(user);
-        assertEquals(BAD_REQUEST.getCode(), awsProxyResponse.getStatusCode());
-        ExceptionResponseBody responseBody = objectMapper.readValue(awsProxyResponse.getBody(), ExceptionResponseBody.class);
+        AwsProxyResponse response = getResponse(user);
+        assertEquals(BAD_REQUEST.getCode(), response.getStatusCode());
+        ExceptionResponseBody responseBody = objectMapper.readValue(response.getBody(), ExceptionResponseBody.class);
         assertEquals("Please enter your year of birth. This is essential for providing meaningful analytics on polls. " +
                 "Your privacy is our top priority. We do not use any information to identify you.", responseBody.getMessageText());
         assertEquals(EMPTY_YEAR_OF_BIRTH.getInternalCode(), responseBody.getInternalCode());
@@ -96,26 +96,63 @@ public class UserControllerTest {
     @Test
     void test_add_necessaryFieldsGiven_201() throws JsonProcessingException {
         assertEquals(OK.getCode(), getResponse(DELETE).getStatusCode());
-        User user = new User();
-        user.setUsername("GreenDemogoblin_4678");
-        user.setGender(Gender.FEMALE);
-        user.setYearOfBirth(1995);
+        User user = getUser();
 
-        AwsProxyRequest awsProxyRequest = getRequest(user);
-        assertEquals(CREATED.getCode(), getResponse(user).getStatusCode());
+        AwsProxyRequest request = getRequest(user);
+        assertEquals(CREATED.getCode(), getResponse(request).getStatusCode());
 
-        AwsProxyResponse awsProxyResponse = getResponse(GET);
-        assertEquals(OK.getCode(), awsProxyResponse.getStatusCode());
-        User savedUser = objectMapper.readValue(awsProxyResponse.getBody(), User.class);
+        AwsProxyResponse response = getResponse(GET);
+        assertEquals(OK.getCode(), response.getStatusCode());
+        User savedUser = objectMapper.readValue(response.getBody(), User.class);
         assertEquals(user.getUsername(), savedUser.getUsername());
         assertEquals(user.getGender(), savedUser.getGender());
         assertEquals(user.getYearOfBirth(), savedUser.getYearOfBirth());
 
-        Principal principal = new Principal(awsProxyRequest.getRequestContext().getAuthorizer());
+        Principal principal = new Principal(request.getRequestContext().getAuthorizer());
         assertEquals(principal.getEmail(), savedUser.getEmail());
         assertEquals(principal.getEmailVerified(), savedUser.getEmailVerified());
         assertEquals(principal.getLocale(), savedUser.getLocale());
         assertEquals(principal.getAuthority() + "#" + principal.getSubject(), savedUser.getId());
+    }
+
+    @Test
+    void test_add_existingUser_400() throws JsonProcessingException {
+        assertEquals(OK.getCode(), getResponse(DELETE).getStatusCode());
+
+        User user = getUser();
+        assertEquals(CREATED.getCode(), getResponse(user).getStatusCode());
+
+        AwsProxyResponse response = getResponse(user);
+        assertEquals(BAD_REQUEST.getCode(), response.getStatusCode());
+        ExceptionResponseBody responseBody = objectMapper.readValue(response.getBody(), ExceptionResponseBody.class);
+        assertEquals("User already exists.", responseBody.getMessageText());
+        assertEquals(EXISTING_USER.getInternalCode(), responseBody.getInternalCode());
+    }
+
+    @Test
+    void test_add_existingUsername_400() throws JsonProcessingException {
+        assertEquals(OK.getCode(), getResponse(DELETE).getStatusCode());
+
+        User user = getUser();
+        assertEquals(CREATED.getCode(), getResponse(user).getStatusCode());
+
+        AwsProxyRequest request = getRequest(user);
+        request.getRequestContext().getAuthorizer().setPrincipalId("987654321");
+        AwsProxyResponse response = getResponse(request);
+        assertEquals(BAD_REQUEST.getCode(), response.getStatusCode());
+        ExceptionResponseBody responseBody = objectMapper.readValue(response.getBody(), ExceptionResponseBody.class);
+        String messagePrefix = "This username is taken. Suggestion: try something like ";
+        assertTrue(responseBody.getMessageText().startsWith(messagePrefix));
+        assertTrue(StringUtils.isNotBlank(responseBody.getMessageText().substring(messagePrefix.length())));
+        assertEquals(EXISTING_USERNAME.getInternalCode(), responseBody.getInternalCode());
+    }
+
+    private User getUser() {
+        User user = new User();
+        user.setUsername("GreenDemogoblin_4678");
+        user.setGender(Gender.FEMALE);
+        user.setYearOfBirth(1995);
+        return user;
     }
 
     private AwsProxyRequest getRequest(User body) throws JsonProcessingException {
@@ -131,7 +168,7 @@ public class UserControllerTest {
         return getResponse(Util.getRequest(BASE_URL, httpMethod));
     }
 
-    private AwsProxyResponse getResponse(AwsProxyRequest awsProxyRequest) {
-        return handler.handleRequest(awsProxyRequest, lambdaContext);
+    private AwsProxyResponse getResponse(AwsProxyRequest request) {
+        return handler.handleRequest(request, lambdaContext);
     }
 }

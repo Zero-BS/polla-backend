@@ -17,6 +17,9 @@ public class Utils {
         return emptyIfNull(list).stream().filter(item -> {
             if (item instanceof String) return StringUtils.isNotBlank((String) item);
             else return item != null;
+        }).map(item -> {
+            if (item instanceof String) return (T) ((String) item).trim();
+            else return item;
         }).collect(toList());
     }
 
