@@ -70,6 +70,7 @@ jacocoTestReport {
 sonarqube {
     properties {
         property "sonar.projectKey", "polla-backend-core"
+        property "sonar.projectName", "polla-backend-core"
     }
 }
 
