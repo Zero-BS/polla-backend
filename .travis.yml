@@ -24,7 +24,9 @@ install:
   - docker run -dp 8000:8000 amazon/dynamodb-local
 
 script:
-  - cd core
+  - cd authorizer
+  - sonar-scanner
+  - cd ../core
   - ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN
   - sleep 10
   - qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=Zero-BS_polla-backend' | jq -r '.projectStatus.status')
