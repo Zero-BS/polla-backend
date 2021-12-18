@@ -26,10 +26,12 @@ install:
 script:
   - cd authorizer
   - sonar-scanner
+  - qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=polla-backend-authorizer' | jq -r '.projectStatus.status')
+  - if [ $qualityGate != 'OK' ]; then exit 1; fi
   - cd ../core
   - ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN
   - sleep 10
-  - qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=Zero-BS_polla-backend' | jq -r '.projectStatus.status')
+  - qualityGate=$(curl --location --request GET 'https://sonarcloud.io/api/qualitygates/project_status?branch=main&projectKey=polla-backend-core' | jq -r '.projectStatus.status')
   - if [ $qualityGate != 'OK' ]; then exit 1; fi
   - cd ..
   - sam validate
