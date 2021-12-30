@@ -45,6 +45,9 @@ Resources:
             RestApiId: !Ref PollaApi
             Path: /{proxy+}
             Method: any
+      Environment:
+        Variables:
+          USE_LOCAL_DB: false
 
   PollaAuthFunction:
     Type: AWS::Serverless::Function
@@ -56,7 +59,6 @@ Resources:
         Variables:
           ANDROID_GOOGLE_CLIENT_ID: !Ref AndroidGoogleClientId
           WEB_GOOGLE_CLIENT_ID: !Ref WebGoogleClientId
-          USE_LOCAL_DB: false
 
   PollaTable:
     Type: AWS::DynamoDB::Table
