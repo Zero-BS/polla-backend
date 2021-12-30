@@ -21,6 +21,9 @@ import org.zerobs.polla.entities.db.User;
 import org.zerobs.polla.test.utils.DBInitializerUtil;
 import org.zerobs.polla.test.utils.Util;
 
+import java.time.Year;
+import java.time.ZoneId;
+
 import static io.micronaut.http.HttpMethod.DELETE;
 import static io.micronaut.http.HttpMethod.GET;
 import static io.micronaut.http.HttpStatus.*;
@@ -145,6 +148,20 @@ public class UserControllerTest {
         assertTrue(responseBody.getMessageText().startsWith(messagePrefix));
         assertTrue(StringUtils.isNotBlank(responseBody.getMessageText().substring(messagePrefix.length())));
         assertEquals(EXISTING_USERNAME.getInternalCode(), responseBody.getInternalCode());
+    }
+
+    @Test
+    void test_add_tooYoungUser_400() throws JsonProcessingException {
+        assertEquals(OK.getCode(), getResponse(DELETE).getStatusCode());
+        User user = new User();
+        user.setUsername("GreenDemogoblin_4678");
+        user.setGender(Gender.FEMALE);
+        user.setYearOfBirth(Year.now(ZoneId.of("UTC")).getValue() - 2);
+        AwsProxyResponse response = getResponse(user);
+        assertEquals(BAD_REQUEST.getCode(), response.getStatusCode());
+        ExceptionResponseBody responseBody = objectMapper.readValue(response.getBody(), ExceptionResponseBody.class);
+        assertEquals("You are too young.", responseBody.getMessageText());
+        assertEquals(TOO_YOUNG_USER.getInternalCode(), responseBody.getInternalCode());
     }
 
     private User getUser() {

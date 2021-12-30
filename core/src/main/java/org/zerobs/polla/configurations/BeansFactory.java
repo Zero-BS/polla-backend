@@ -10,14 +10,14 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import io.micronaut.context.MessageSource;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Value;
-
 import io.micronaut.context.i18n.ResourceBundleMessageSource;
 import jakarta.inject.Singleton;
+
 import java.util.Locale;
 
 @Factory
 public class BeansFactory {
-    @Value("${use.local.db:false}")
+    @Value("${use.local.db}")
     private boolean useLocalDb;
     @Value("${aws.default.region}")
     private Regions region;
