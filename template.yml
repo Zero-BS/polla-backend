@@ -56,6 +56,7 @@ Resources:
         Variables:
           ANDROID_GOOGLE_CLIENT_ID: !Ref AndroidGoogleClientId
           WEB_GOOGLE_CLIENT_ID: !Ref WebGoogleClientId
+          USE_LOCAL_DB: false
 
   PollaTable:
     Type: AWS::DynamoDB::Table
