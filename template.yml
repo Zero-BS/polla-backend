@@ -45,9 +45,6 @@ Resources:
             RestApiId: !Ref PollaApi
             Path: /{proxy+}
             Method: any
-      Environment:
-        Variables:
-          USE_LOCAL_DB: false
 
   PollaAuthFunction:
     Type: AWS::Serverless::Function

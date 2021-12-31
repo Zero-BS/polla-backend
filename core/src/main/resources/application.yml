@@ -3,5 +3,5 @@ micronaut:
     name: polla
 jackson:
   property-naming-strategy: SNAKE_CASE
-locale:
-  default: en-US
+locale.default: en-US
+use.local.db: false
