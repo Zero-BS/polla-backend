@@ -1,45 +1,50 @@
 package org.zerobs.polla.entities.db;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.util.Locale;
 
-import static org.zerobs.polla.constants.ApplicationConstants.TABLE_NAME;
-
 @Data
-@DynamoDBTable(tableName = TABLE_NAME)
+@DynamoDbBean
 public abstract class Entity {
     protected static final String SEPARATOR = "#";
     private static final String ENTITY_IDENTIFIER = "ENTITY";
 
     @JsonIgnore
-    @DynamoDBIgnore
     private final String entityClassIdentifier = getClass().getSimpleName().toUpperCase(Locale.ROOT);
 
-    @DynamoDBIgnore
     protected String id;
 
     @JsonIgnore
     protected String pk;
 
-    @DynamoDBRangeKey
     @JsonIgnore
     protected String sk = ENTITY_IDENTIFIER;
 
-    @DynamoDBIgnore
+    @DynamoDbIgnore
     @JsonIgnore
     protected String getPkInitials() {
         return entityClassIdentifier + SEPARATOR;
     }
 
-    @DynamoDBHashKey
+    @DynamoDbPartitionKey
     public String getPk() {
         return getPkInitials() + id;
+    }
+
+    @DynamoDbSortKey
+    public String getSk() {
+        return sk;
+    }
+
+    @DynamoDbIgnore
+    public String getEntityIdentifier() {
+        return entityClassIdentifier;
     }
 
     public void setPk(String pk) {

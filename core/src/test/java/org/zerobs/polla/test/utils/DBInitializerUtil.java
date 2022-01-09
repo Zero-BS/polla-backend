@@ -1,15 +1,10 @@
 package org.zerobs.polla.test.utils;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableCollection;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.zerobs.polla.entities.db.Tag;
 import org.zerobs.polla.entities.db.User;
 import org.zerobs.polla.utilities.Utils;
-
-import java.util.stream.StreamSupport;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import static org.zerobs.polla.constants.ApplicationConstants.TABLE_NAME;
 
@@ -19,99 +14,98 @@ public class DBInitializerUtil {
     private static final long RCU = 3;
     private static final long WCU = 3;
 
-    private final DynamoDB dynamoDB;
-    private final AmazonDynamoDB amazonDynamoDB;
+    private final DynamoDbClient dynamoDbClient;
 
-    public DBInitializerUtil(DynamoDB dynamoDB, AmazonDynamoDB amazonDynamoDB) {
-        this.dynamoDB = dynamoDB;
-        this.amazonDynamoDB = amazonDynamoDB;
+    public DBInitializerUtil(DynamoDbClient dynamoDbClient) {
+        this.dynamoDbClient = dynamoDbClient;
     }
 
     //@PostConstruct
     public void initDB() throws InterruptedException {
-        TableCollection<ListTablesResult> tables = dynamoDB.listTables();
-        var pollaTable = StreamSupport.stream(tables.spliterator(), false)
-                .filter(table -> TABLE_NAME.equals(table.getTableName())).findAny().orElse(null);
-
-        if (pollaTable == null) {
-            pollaTable = createTable(getGsiUsername(), getGsiTagName());
-            pollaTable.waitForActive();
+        if (!dynamoDbClient.listTables().tableNames().contains(TABLE_NAME)) {
+            CreateTableResponse createTableResponse = createTable(getGsiUsername(), getGsiTagName());
+            while (!createTableResponse.tableDescription().tableStatus().equals(TableStatus.ACTIVE))
+                //noinspection BusyWait
+                Thread.sleep(5000);
         }
 
-        var globalSecondaryIndexes = Utils.cleanList(pollaTable.describe().getGlobalSecondaryIndexes());
+        var globalSecondaryIndexes = Utils.cleanList(dynamoDbClient.describeTable(
+                DescribeTableRequest.builder().tableName(TABLE_NAME).build()).table().globalSecondaryIndexes());
 
-        if (globalSecondaryIndexes.stream().noneMatch(gsi -> User.GSI_NAME_USERNAME.equals(gsi.getIndexName()))) {
+        if (globalSecondaryIndexes.stream().noneMatch(gsi -> User.GSI_NAME_USERNAME.equals(gsi.indexName()))) {
             addGsiUsername();
-            waitForIndexActive(pollaTable, User.GSI_NAME_USERNAME);
+            waitForIndexActive(User.GSI_NAME_USERNAME);
         }
 
-        if (globalSecondaryIndexes.stream().noneMatch(gsi -> Tag.GSI_NAME_TAG_NAME.equals(gsi.getIndexName()))) {
+        if (globalSecondaryIndexes.stream().noneMatch(gsi -> Tag.GSI_NAME_TAG_NAME.equals(gsi.indexName()))) {
             addGsiTagName();
-            waitForIndexActive(pollaTable, Tag.GSI_NAME_TAG_NAME);
+            waitForIndexActive(Tag.GSI_NAME_TAG_NAME);
         }
     }
 
-    private Table createTable(GlobalSecondaryIndex... globalSecondaryIndices) {
-        return dynamoDB.createTable(new CreateTableRequest()
-                .withTableName(TABLE_NAME)
-                .withKeySchema(new KeySchemaElement(PK_ATTRIBUTE_NAME, KeyType.HASH),
-                        new KeySchemaElement(SK_ATTRIBUTE_NAME, KeyType.RANGE))
-                .withAttributeDefinitions(new AttributeDefinition(PK_ATTRIBUTE_NAME, ScalarAttributeType.S),
-                        new AttributeDefinition(SK_ATTRIBUTE_NAME, ScalarAttributeType.S),
-                        new AttributeDefinition(User.PK_USERNAME_GSI, ScalarAttributeType.S),
-                        new AttributeDefinition(Tag.PK_TAG_NAME_GSI, ScalarAttributeType.S),
-                        new AttributeDefinition(Tag.SK_TAG_NAME_GSI, ScalarAttributeType.S))
-                .withBillingMode(BillingMode.PROVISIONED)
-                .withGlobalSecondaryIndexes(globalSecondaryIndices)
-                .withProvisionedThroughput(new ProvisionedThroughput(RCU, WCU)));
+    private CreateTableResponse createTable(GlobalSecondaryIndex... globalSecondaryIndices) {
+        return dynamoDbClient.createTable(CreateTableRequest.builder()
+                .tableName(TABLE_NAME)
+                .keySchema(KeySchemaElement.builder().attributeName(PK_ATTRIBUTE_NAME).keyType(KeyType.HASH).build(),
+                        KeySchemaElement.builder().attributeName(SK_ATTRIBUTE_NAME).keyType(KeyType.RANGE).build())
+                .attributeDefinitions(AttributeDefinition.builder().attributeName(PK_ATTRIBUTE_NAME).attributeType(ScalarAttributeType.S).build(),
+                        AttributeDefinition.builder().attributeName(SK_ATTRIBUTE_NAME).attributeType(ScalarAttributeType.S).build(),
+                        AttributeDefinition.builder().attributeName(User.PK_USERNAME_GSI).attributeType(ScalarAttributeType.S).build(),
+                        AttributeDefinition.builder().attributeName(Tag.PK_TAG_NAME_GSI).attributeType(ScalarAttributeType.S).build(),
+                        AttributeDefinition.builder().attributeName(Tag.SK_TAG_NAME_GSI).attributeType(ScalarAttributeType.S).build())
+                .billingMode(BillingMode.PROVISIONED)
+                .globalSecondaryIndexes(globalSecondaryIndices)
+                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(RCU).writeCapacityUnits(WCU).build()).build());
     }
 
     private GlobalSecondaryIndex getGsiUsername() {
-        return new GlobalSecondaryIndex()
-                .withIndexName(User.GSI_NAME_USERNAME)
-                .withKeySchema(new KeySchemaElement(User.PK_USERNAME_GSI, KeyType.HASH))
-                .withProjection(new Projection().withProjectionType(ProjectionType.ALL))
-                .withProvisionedThroughput(new ProvisionedThroughput(RCU, WCU));
+        return GlobalSecondaryIndex.builder()
+                .indexName(User.GSI_NAME_USERNAME)
+                .keySchema(KeySchemaElement.builder().attributeName(User.PK_USERNAME_GSI).keyType(KeyType.HASH).build())
+                .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
+                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(RCU).writeCapacityUnits(WCU).build()).build();
     }
 
     private GlobalSecondaryIndex getGsiTagName() {
-        return new GlobalSecondaryIndex()
-                .withIndexName(Tag.GSI_NAME_TAG_NAME)
-                .withKeySchema(new KeySchemaElement(Tag.PK_TAG_NAME_GSI, KeyType.HASH),
-                        new KeySchemaElement(Tag.SK_TAG_NAME_GSI, KeyType.RANGE))
-                .withProjection(new Projection().withProjectionType(ProjectionType.ALL))
-                .withProvisionedThroughput(new ProvisionedThroughput(RCU, WCU));
+        return GlobalSecondaryIndex.builder()
+                .indexName(Tag.GSI_NAME_TAG_NAME)
+                .keySchema(KeySchemaElement.builder().attributeName(Tag.PK_TAG_NAME_GSI).keyType(KeyType.HASH).build(),
+                        KeySchemaElement.builder().attributeName(Tag.SK_TAG_NAME_GSI).keyType(KeyType.RANGE).build())
+                .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
+                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(RCU).writeCapacityUnits(WCU).build()).build();
     }
 
     private void addGsiUsername() {
-        amazonDynamoDB.updateTable(new UpdateTableRequest()
-                .withTableName(TABLE_NAME)
-                .withAttributeDefinitions(new AttributeDefinition(User.PK_USERNAME_GSI, ScalarAttributeType.S))
-                .withGlobalSecondaryIndexUpdates(new GlobalSecondaryIndexUpdate()
-                        .withCreate(new CreateGlobalSecondaryIndexAction()
-                                .withIndexName(User.GSI_NAME_USERNAME)
-                                .withKeySchema(new KeySchemaElement(User.PK_USERNAME_GSI, KeyType.HASH))
-                                .withProjection(new Projection().withProjectionType(ProjectionType.ALL))
-                                .withProvisionedThroughput(new ProvisionedThroughput(RCU, WCU)))));
+        dynamoDbClient.updateTable(UpdateTableRequest.builder()
+                .tableName(TABLE_NAME)
+                .attributeDefinitions(AttributeDefinition.builder().attributeName(User.PK_USERNAME_GSI).attributeType(ScalarAttributeType.S).build())
+                .globalSecondaryIndexUpdates(GlobalSecondaryIndexUpdate.builder()
+                        .create(CreateGlobalSecondaryIndexAction.builder()
+                                .indexName(User.GSI_NAME_USERNAME)
+                                .keySchema(KeySchemaElement.builder().attributeName(User.PK_USERNAME_GSI).keyType(KeyType.HASH).build())
+                                .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
+                                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(RCU).writeCapacityUnits(WCU).build()).build()).build()).build());
     }
 
     private void addGsiTagName() {
-        amazonDynamoDB.updateTable(new UpdateTableRequest()
-                .withTableName(TABLE_NAME)
-                .withAttributeDefinitions(new AttributeDefinition(Tag.PK_TAG_NAME_GSI, ScalarAttributeType.S),
-                        new AttributeDefinition(Tag.SK_TAG_NAME_GSI, ScalarAttributeType.S))
-                .withGlobalSecondaryIndexUpdates(new GlobalSecondaryIndexUpdate()
-                        .withCreate(new CreateGlobalSecondaryIndexAction()
-                                .withIndexName(Tag.GSI_NAME_TAG_NAME)
-                                .withKeySchema(new KeySchemaElement(Tag.PK_TAG_NAME_GSI, KeyType.HASH),
-                                        new KeySchemaElement(Tag.SK_TAG_NAME_GSI, KeyType.RANGE))
-                                .withProjection(new Projection().withProjectionType(ProjectionType.ALL))
-                                .withProvisionedThroughput(new ProvisionedThroughput(RCU, WCU)))));
+        dynamoDbClient.updateTable(UpdateTableRequest.builder()
+                .tableName(TABLE_NAME)
+                .attributeDefinitions(AttributeDefinition.builder().attributeName(Tag.PK_TAG_NAME_GSI).attributeType(ScalarAttributeType.S).build(),
+                        AttributeDefinition.builder().attributeName(Tag.SK_TAG_NAME_GSI).attributeType(ScalarAttributeType.S).build())
+                .globalSecondaryIndexUpdates(GlobalSecondaryIndexUpdate.builder()
+                        .create(CreateGlobalSecondaryIndexAction.builder()
+                                .indexName(Tag.GSI_NAME_TAG_NAME)
+                                .keySchema(KeySchemaElement.builder().attributeName(Tag.PK_TAG_NAME_GSI).keyType(KeyType.HASH).build(),
+                                        KeySchemaElement.builder().attributeName(Tag.SK_TAG_NAME_GSI).keyType(KeyType.RANGE).build())
+                                .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
+                                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(RCU).writeCapacityUnits(WCU).build()).build()).build()).build());
     }
 
-    private void waitForIndexActive(Table table, String indexName) throws InterruptedException {
-        while (!table.describe().getGlobalSecondaryIndexes().stream().filter(gsi -> indexName.equals(gsi.getIndexName()))
-                .findAny().orElseThrow().getIndexStatus().equals(IndexStatus.ACTIVE.toString()))
+    private void waitForIndexActive(String indexName) throws InterruptedException {
+        TableDescription tableDescription = dynamoDbClient.describeTable(DescribeTableRequest.builder().tableName(TABLE_NAME).build()).table();
+        GlobalSecondaryIndexDescription gsiDescription = tableDescription.globalSecondaryIndexes().stream().filter(gsi -> indexName.equals(gsi.indexName()))
+                .findAny().orElseThrow();
+        while (!gsiDescription.indexStatus().equals(IndexStatus.ACTIVE))
             //noinspection BusyWait
             Thread.sleep(5000);
     }

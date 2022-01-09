@@ -1,8 +1,7 @@
 package org.zerobs.polla.repositories;
 
-import org.zerobs.polla.entities.db.User;
-
 import jakarta.inject.Singleton;
+import org.zerobs.polla.entities.db.User;
 
 @Singleton
 public class DefaultUserRepository extends DefaultEntityRepository<User> implements UserRepository {

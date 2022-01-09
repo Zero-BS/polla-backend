@@ -1,0 +1,12 @@
+[
+  {
+    "name": "com.amazonaws.serverless.proxy.model.AwsProxyRequest",
+    "allPublicMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.amazonaws.serverless.proxy.model.ErrorModel",
+    "allPublicMethods": true,
+    "allDeclaredConstructors": true
+  }
+]

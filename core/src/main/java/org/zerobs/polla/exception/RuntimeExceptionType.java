@@ -33,7 +33,8 @@ public enum RuntimeExceptionType {
     LARGE_TAGS("error.large.tags", 4023),
     INVALID_USER("error.invalid.user", 4024, HttpStatus.NOT_FOUND),
     NOT_CREATED_USER("error.not.created.user", 4025, HttpStatus.FORBIDDEN),
-    FAILED_APPLICATION_INIT("error.failed.application.init", 4026, HttpStatus.INTERNAL_SERVER_ERROR);
+    FAILED_APPLICATION_INIT("error.failed.application.init", 4026, HttpStatus.INTERNAL_SERVER_ERROR),
+    FAILED_BATCH_SAVE("error.failed.batch.save", 4027, HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String messageTextPropertyId;
     private final int internalCode;

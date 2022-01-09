@@ -1,3 +1,3 @@
 build-PollaCoreFunction:
-	./gradlew buildNativeLambda
-	unzip build/libs/*.zip -d $(ARTIFACTS_DIR)
+	./gradlew assemble
+	unzip build/libs/polla-0.1-all.jar -d $(ARTIFACTS_DIR)

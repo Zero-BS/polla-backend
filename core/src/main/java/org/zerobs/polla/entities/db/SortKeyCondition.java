@@ -4,12 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum SortKeyCondition {
-    EQUAL_TO(" = "),
-    BEGINS_WITH("begins_with");
-
-    private final String conditionString;
-
-    SortKeyCondition(String conditionString) {
-        this.conditionString = conditionString;
-    }
+    EQUAL_TO,
+    BEGINS_WITH;
 }

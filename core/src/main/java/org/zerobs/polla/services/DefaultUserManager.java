@@ -2,14 +2,14 @@ package org.zerobs.polla.services;
 
 import com.github.javafaker.Faker;
 import io.micronaut.core.annotation.Nullable;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.zerobs.polla.entities.Principal;
 import org.zerobs.polla.entities.db.User;
 import org.zerobs.polla.exception.CustomRuntimeException;
 import org.zerobs.polla.repositories.UserRepository;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import java.time.Year;
 import java.time.ZoneId;
 import java.util.Locale;
@@ -63,7 +63,7 @@ public class DefaultUserManager implements UserManager {
     @Nullable
     public User get(Principal principal) {
         var user = new User(principal);
-        user = userRepository.getByPk(user.getPk());
+        user = userRepository.get(user);
         if (user == null)
             return null;
         if (!user.getEmail().equals(principal.getEmail())) {

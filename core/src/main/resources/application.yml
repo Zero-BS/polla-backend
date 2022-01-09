@@ -3,5 +3,9 @@ micronaut:
     name: polla
 jackson:
   property-naming-strategy: SNAKE_CASE
-locale.default: en-US
-use.local.db: false
+default:
+  locale: en-US
+aws:
+  apache-client:
+    proxy:
+      endpoint: http://localhost:8000

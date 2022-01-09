@@ -1,6 +1,6 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
-    id("io.micronaut.application") version "2.0.6"
+    id("io.micronaut.application") version "3.0.2"
     id "org.sonarqube" version "3.3"
     id 'jacoco'
 }
@@ -22,24 +22,32 @@ micronaut {
 }
 
 dependencies {
-    def micronautVersion = '3.1.0'
-    implementation      group: 'io.micronaut', name: 'micronaut-runtime',     version: micronautVersion
-    implementation      group: 'io.micronaut', name: 'micronaut-validation',  version: micronautVersion
-    testImplementation  group: 'io.micronaut', name: 'micronaut-http-client', version: micronautVersion
-    annotationProcessor group: 'io.micronaut', name: 'micronaut-inject-java', version: micronautVersion
-    compileOnly         group: 'io.micronaut', name: 'micronaut-aop',         version: micronautVersion
+    def micronautVersion = '3.2.3'
+    implementation "io.micronaut:micronaut-runtime:${micronautVersion}"
+    implementation "io.micronaut:micronaut-validation:${micronautVersion}"
+    testImplementation "io.micronaut:micronaut-http-client:${micronautVersion}"
+    //annotationProcessor "io.micronaut:micronaut-inject-java:${micronautVersion}"
+    //compileOnly "io.micronaut:micronaut-aop:${micronautVersion}"
 
-    compileOnly group: 'org.graalvm.nativeimage', name: 'svm', version: '21.2.0'
-    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
-    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
-    runtimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.6'
+    def micronautAwsVersion = '3.1.0'
+    implementation "io.micronaut.aws:micronaut-aws-sdk-v2:${micronautAwsVersion}"
+    implementation "io.micronaut.aws:micronaut-function-aws-api-proxy:${micronautAwsVersion}"
+    implementation "io.micronaut.aws:micronaut-function-aws-custom-runtime:${micronautAwsVersion}"
 
-    implementation group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.12.87'
+    compileOnly 'org.graalvm.nativeimage:svm:21.3.0'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.2.10'
 
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+    implementation platform("software.amazon.awssdk:bom:2.17.102")
+    implementation 'software.amazon.awssdk:lambda'
+    implementation 'software.amazon.awssdk:dynamodb'
+    implementation 'software.amazon.awssdk:dynamodb-enhanced'
 
-    implementation group: 'com.github.javafaker', name: 'javafaker', version: '1.0.2'
-    implementation group: 'com.google.guava', name: 'guava', version: '31.0.1-jre'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+    implementation 'com.github.javafaker:javafaker:1.0.2'
+    implementation 'com.google.guava:guava:31.0.1-jre'
 }
 
 
@@ -76,4 +84,14 @@ sonarqube {
 
 tasks.named('sonarqube').configure {
     dependsOn test
+}
+
+graalvmNative {
+    binaries {
+        main {
+            def graalvmConfigPath = 'resources/graalvm_config/'
+            buildArgs "-H:DynamicProxyConfigurationFiles=${graalvmConfigPath}dynamic-proxies.json",
+                    "-H:ReflectionConfigurationFiles=${graalvmConfigPath}reflect-config.json"
+        }
+    }
 }

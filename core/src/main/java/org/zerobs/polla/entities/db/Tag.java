@@ -1,22 +1,16 @@
 package org.zerobs.polla.entities.db;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.micronaut.core.annotation.Introspected;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import javax.validation.constraints.Null;
 import java.util.Locale;
 
-import static org.zerobs.polla.constants.ApplicationConstants.TABLE_NAME;
-
 @EqualsAndHashCode(callSuper = true)
-@DynamoDBTable(tableName = TABLE_NAME)
+@DynamoDbBean
 @Data
 @NoArgsConstructor
-@Introspected
 public class Tag extends CreatableEntity {
     public static final String GSI_NAME_TAG_NAME = "GSI-tag-name";
     public static final String PK_TAG_NAME_GSI = "tag_name_gsi_pk";
@@ -24,31 +18,43 @@ public class Tag extends CreatableEntity {
     public static final GSI GSI_TAG_NAME = new GSI(GSI_NAME_TAG_NAME, PK_TAG_NAME_GSI, SK_TAG_NAME_GSI);
     @JsonIgnore
     public static final String TAG_GSI_PK_VALUE = "TAG";
-    @DynamoDBIgnore
     @JsonIgnore
     @Null
     protected Long updatedOn;
     private String name;
     private Integer followers;
     @JsonIgnore
-    @DynamoDBAttribute(attributeName = SK_TAG_NAME_GSI)
-    @DynamoDBIndexRangeKey(globalSecondaryIndexName = GSI_NAME_TAG_NAME)
     private String loweredNameName;
     @JsonIgnore
-    @DynamoDBIgnore
     private boolean newTag;
-    @DynamoDBAttribute(attributeName = PK_TAG_NAME_GSI)
-    @DynamoDBIndexHashKey(globalSecondaryIndexName = GSI_NAME_TAG_NAME)
-    private String tagGsiPk = TAG_GSI_PK_VALUE;
+    @Setter(AccessLevel.NONE)
+    private String tagGsiPk;
 
     public Tag(String name) {
         this.name = name;
     }
 
+    @DynamoDbAttribute(SK_TAG_NAME_GSI)
+    @DynamoDbSecondarySortKey(indexNames = {GSI_NAME_TAG_NAME})
     public String getLoweredNameName() {
         if (name == null)
             return null;
         return name.toLowerCase(Locale.ROOT) + SEPARATOR + name;
     }
 
+    @DynamoDbIgnore
+    protected Long getUpdatedOn() {
+        return null;
+    }
+
+    @DynamoDbIgnore
+    public boolean isNewTag() {
+        return newTag;
+    }
+
+    @DynamoDbAttribute(PK_TAG_NAME_GSI)
+    @DynamoDbSecondaryPartitionKey(indexNames = {GSI_NAME_TAG_NAME})
+    public String getTagGsiPk() {
+        return TAG_GSI_PK_VALUE;
+    }
 }

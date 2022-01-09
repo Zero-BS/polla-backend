@@ -28,7 +28,7 @@ Resources:
     Properties:
       Handler: io.micronaut.function.aws.proxy.MicronautLambdaHandler
       # Use "Runtime: java11" in local for faster build
-      Runtime: provided.al2
+      Runtime: java11
       CodeUri: ./core
       MemorySize: 1024
       Policies:
@@ -45,6 +45,11 @@ Resources:
             RestApiId: !Ref PollaApi
             Path: /{proxy+}
             Method: any
+      Environment:
+        Variables:
+          USE_LOCAL_DB: false
+    Metadata:
+      BuildMethod: makefile
 
   PollaAuthFunction:
     Type: AWS::Serverless::Function

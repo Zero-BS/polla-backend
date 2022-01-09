@@ -4,8 +4,6 @@ import com.amazonaws.serverless.exceptions.ContainerInitializationException;
 import com.amazonaws.serverless.proxy.internal.testutils.MockLambdaContext;
 import com.amazonaws.serverless.proxy.model.AwsProxyRequest;
 import com.amazonaws.serverless.proxy.model.AwsProxyResponse;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +18,7 @@ import org.zerobs.polla.entities.Principal;
 import org.zerobs.polla.entities.db.User;
 import org.zerobs.polla.test.utils.DBInitializerUtil;
 import org.zerobs.polla.test.utils.Util;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.time.Year;
 import java.time.ZoneId;
@@ -44,8 +43,7 @@ public class UserControllerTest {
         handler = new MicronautLambdaHandler();
         applicationContext = handler.getApplicationContext();
         objectMapper = applicationContext.getBean(ObjectMapper.class);
-        new DBInitializerUtil(applicationContext.getBean(DynamoDB.class),
-                applicationContext.getBean(AmazonDynamoDB.class)).initDB();
+        new DBInitializerUtil(applicationContext.getBean(DynamoDbClient.class)).initDB();
     }
 
     @AfterAll
